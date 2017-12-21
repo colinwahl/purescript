@@ -34,6 +34,7 @@ module Language.PureScript.Docs.RenderedCode.Types
  , keywordKind
  , keywordAs
  , ident
+ , testident
  , dataCtor
  , typeCtor
  , typeOp
@@ -320,6 +321,10 @@ keywordAs = keyword "as"
 ident :: Qualified Ident -> RenderedCode
 ident (fromQualified -> (mn, name)) =
   RC [Symbol ValueLevel (runIdent name) (Link mn)]
+
+testident :: Qualified Ident -> RenderedCode
+testident (fromQualified -> (_, name)) =
+  RC [Symbol ValueLevel (runIdent name) NoLink]
 
 dataCtor :: Qualified (ProperName 'ConstructorName) -> RenderedCode
 dataCtor (fromQualified -> (mn, name)) =
