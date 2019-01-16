@@ -721,7 +721,7 @@ check' (Accessor prop val) ty = withErrorMessageHint (ErrorCheckingAccessor val 
 check' v@(Constructor _ c) ty = do
   env <- getEnv
   case M.lookup c (dataConstructors env) of
-    Nothing -> throwError . errorMessage . UnknownName . fmap DctorName $ c
+    Nothing -> throwError . errorMessage' (fst $ getAnnForType ty) . UnknownName . fmap DctorName $ c
     Just (_, _, ty1, _) -> do
       repl <- introduceSkolemScope <=< replaceAllTypeSynonyms $ ty1
       ty' <- introduceSkolemScope ty
