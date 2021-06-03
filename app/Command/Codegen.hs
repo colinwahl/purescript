@@ -109,5 +109,5 @@ command = codegen <$> (Opts.helper <*> codegenOptions)
   sourceMaps :: Opts.Parser Bool
   sourceMaps =
     Opts.switch $
-      Opts.long "json-errors" <>
+      Opts.long "source-maps" <>
       Opts.help "Generate source maps for generated JS"
