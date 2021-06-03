@@ -13,6 +13,41 @@ New features:
   Adds a new command, `purs codegen`, which generates JavaScript code
   for the given files containing the CoreFn Module JSON representation.
 
+* Make type class instance names optional (#4085, @JordanMartinez)
+
+  Previously, one would be required to define a unique name for a type class
+  instance. For example
+
+  ```purescript
+  -- instance naming convention:
+  -- classNameType1Type2Type3
+  instance fooIntString :: Foo Int String
+  ```
+
+  Now, the name and `::` separator characters are optional. The above instance
+  could be rewritten like so:
+
+  ```purescript
+  instance Foo Int String
+  ```
+
+  and the compiler will generate a unique name for the instance
+  (e.g. `$dollar_FooIntString_4` where `4` is a randomly-generated number
+  that can change across compiler runs). This version of the instance name
+  is not intended for use in FFI.
+
+  Note: if one wrote
+
+  ```purescript
+  instance ReallyLongClassName Int String
+  ```
+
+  the generated name would be something like
+  `$dollar_ReallyLongClassNameIntStr_87` rather than
+  `$dollar_ReallyLongClassNameIntString_87` as the generated part
+  of the name will be truncated to 25 characters (long enough to be readable
+  without being too verbose).
+
 Bugfixes:
 
 * Unused identifier warnings now report smaller and more relevant source spans (#4088, @nwolverson)
@@ -39,6 +74,12 @@ Internal:
 * Avoid compiling tests with diagnostics twice in test suite (#4079, @hdgarrood)
 
 * Do less work in test initialization (#4080, @rhendric)
+
+* Follow more HLint suggestions (#4090, @rhendric)
+
+* Export `rebuildModule'` to speed up Try PureScript! slightly (#4095 by @JordanMartinez)
+
+* Merge `purescript-ast` into `purescript-cst` (#4094 by @JordanMartinez)
 
 ## v0.14.1
 

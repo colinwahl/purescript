@@ -17,7 +17,7 @@ import           Control.Monad.Supply.Class
 import           Data.Graph
 import           Data.List (find, partition)
 import qualified Data.Map as M
-import           Data.Maybe (catMaybes, mapMaybe, isJust, fromMaybe)
+import           Data.Maybe (catMaybes, mapMaybe, isJust)
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Set as S
 import           Data.Text (Text)
@@ -214,16 +214,17 @@ desugarDecl syns kinds mn exps = go
     modify (M.insert (mn, name) (makeTypeClassData args (map memberToNameAndType members) implies deps False))
     return (Nothing, d : typeClassDictionaryDeclaration sa name args implies members : map (typeClassMemberToDictionaryAccessor mn name args) members)
   go (TypeInstanceDeclaration _ _ _ _ _ _ _ DerivedInstance) = internalError "Derived instanced should have been desugared"
-  go d@(TypeInstanceDeclaration sa _ _ name deps className tys (ExplicitInstance members))
+  go (TypeInstanceDeclaration _ _ _ (Left _) _ _ _ _) = internalError "instance names should have been desugared"
+  go d@(TypeInstanceDeclaration sa _ _ (Right name) deps className tys (ExplicitInstance members))
     | className == C.Coercible
     = throwError . errorMessage' (fst sa) $ InvalidCoercibleInstanceDeclaration tys
     | otherwise = do
     desugared <- desugarCases members
     dictDecl <- typeInstanceDictionaryDeclaration syns kinds sa name mn deps className tys desugared
     return (expRef name className tys, [d, dictDecl])
-  go d@(TypeInstanceDeclaration sa _ _ name deps className tys (NewtypeInstanceWithDictionary dict)) = do
+  go d@(TypeInstanceDeclaration sa _ _ (Right name) deps className tys (NewtypeInstanceWithDictionary dict)) = do
     let dictTy = foldl srcTypeApp (srcTypeConstructor (fmap (coerceProperName . dictSynonymName) className)) tys
-        constrainedTy = quantify (foldr (srcConstrainedType) dictTy deps)
+        constrainedTy = quantify (foldr srcConstrainedType dictTy deps)
     return (expRef name className tys, [d, ValueDecl sa name Private [] [MkUnguarded (TypedValue True dict constrainedTy)]])
   go other = return (Nothing, [other])
 
@@ -287,7 +288,7 @@ typeClassMemberToDictionaryAccessor
   -> Declaration
 typeClassMemberToDictionaryAccessor mn name args (TypeDeclaration (TypeDeclarationData sa ident ty)) =
   let className = Qualified (Just mn) name
-  in ValueDecl sa ident Private [] $
+  in ValueDecl sa ident Private []
     [MkUnguarded (
      TypedValue False (TypeClassDictionaryAccessor className ident) $
        moveQuantifiersToFront (quantify (srcConstrainedType (srcConstraint className [] (map (srcTypeVar . fst) args) Nothing) ty))
@@ -361,7 +362,7 @@ declIdent (TypeDeclaration td) = Just (tydeclIdent td)
 declIdent _ = Nothing
 
 typeClassMemberName :: Declaration -> Text
-typeClassMemberName = fromMaybe (internalError "typeClassMemberName: Invalid declaration in type class definition") . fmap runIdent . declIdent
+typeClassMemberName = maybe (internalError "typeClassMemberName: Invalid declaration in type class definition") runIdent . declIdent
 
 superClassDictionaryNames :: [Constraint a] -> [Text]
 superClassDictionaryNames supers =

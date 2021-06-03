@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- |
 -- This module generates code for \"externs\" files, i.e. files containing only
 -- foreign import declarations.
@@ -30,6 +28,7 @@ import qualified Data.Map as M
 import qualified Data.List.NonEmpty as NEL
 
 import Language.PureScript.AST
+import Language.PureScript.AST.Declarations.ChainId (ChainId)
 import Language.PureScript.Crash
 import Language.PureScript.Environment
 import Language.PureScript.Names
@@ -150,7 +149,7 @@ data ExternsDeclaration =
       , edInstanceKinds           :: [SourceType]
       , edInstanceTypes           :: [SourceType]
       , edInstanceConstraints     :: Maybe [SourceConstraint]
-      , edInstanceChain           :: [Qualified Ident]
+      , edInstanceChain           :: Maybe ChainId
       , edInstanceChainIndex      :: Integer
       }
   deriving (Show, Generic)
@@ -204,16 +203,13 @@ moduleToExternsFile (Module ss _ mn ds (Just exps)) env = ExternsFile{..}
 
   fixityDecl :: Declaration -> Maybe ExternsFixity
   fixityDecl (ValueFixityDeclaration _ (Fixity assoc prec) name op) =
-    fmap (const (ExternsFixity assoc prec op name)) (find (findOp getValueOpRef op) exps)
+    fmap (const (ExternsFixity assoc prec op name)) (find ((== Just op) . getValueOpRef) exps)
   fixityDecl _ = Nothing
 
   typeFixityDecl :: Declaration -> Maybe ExternsTypeFixity
   typeFixityDecl (TypeFixityDeclaration _ (Fixity assoc prec) name op) =
-    fmap (const (ExternsTypeFixity assoc prec op name)) (find (findOp getTypeOpRef op) exps)
+    fmap (const (ExternsTypeFixity assoc prec op name)) (find ((== Just op) . getTypeOpRef) exps)
   typeFixityDecl _ = Nothing
-
-  findOp :: (DeclarationRef -> Maybe (OpName a)) -> OpName a -> DeclarationRef -> Bool
-  findOp g op = maybe False (== op) . g
 
   importDecl :: Declaration -> Maybe ExternsImport
   importDecl (ImportDeclaration _ m mt qmn) = Just (ExternsImport m mt qmn)

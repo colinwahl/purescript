@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 module Language.PureScript.Ide.StateSpec where
 
 import           Protolude
@@ -67,7 +65,7 @@ ef = P.ExternsFile
       -- , edInstanceConstraints =
       mempty
       -- , edInstanceChain =
-      mempty
+      Nothing
       -- , edInstanceChainIndex =
       0
  --     }
