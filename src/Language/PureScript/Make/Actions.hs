@@ -221,8 +221,7 @@ buildMakeActions outputDir filePathMap foreigns usePrefix =
       writeJSONFile (outputFilename modName "docs.json") docsMod
 
   codegenExterns :: ModuleName -> ExternsFile -> Make ()
-  codegenExterns mn exts =
-    writeCborFile (outputFilename mn externsFileName) exts
+  codegenExterns mn = writeCborFile (outputFilename mn externsFileName)
 
   codegenCoreFn :: ModuleName -> CF.Module CF.Ann -> Make ()
   codegenCoreFn mn m = do
@@ -254,8 +253,7 @@ buildMakeActions outputDir filePathMap foreigns usePrefix =
       when sourceMaps $ genSourceMap dir mapFile (length prefix) mappings
 
   codegenDocs :: ModuleName -> Docs.Module -> Make ()
-  codegenDocs mn docs =
-    writeJSONFile (outputFilename mn "docs.json") docs
+  codegenDocs mn = writeJSONFile (outputFilename mn "docs.json")
 
   codegen :: CF.Module CF.Ann -> Docs.Module -> ExternsFile -> SupplyT Make ()
   codegen m docs exts = do
